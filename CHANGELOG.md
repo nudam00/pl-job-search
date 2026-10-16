@@ -1,1 +1,18 @@
 # Changelog
+
+## [0.2.0](https://github.com/nudam00/role-radar/compare/role-radar-v0.1.0...role-radar-v0.2.0) (2026-10-16)
+
+
+### Features
+
+* initial release ([da587c6](https://github.com/nudam00/role-radar/commit/da587c6a69b43a8df98c90b5499755d6bfd6c099))
+
+
+### Miscellaneous
+
+* **deps:** bump https://github.com/astral-sh/ruff-pre-commit ([ca0fa84](https://github.com/nudam00/role-radar/commit/ca0fa84cd03433706535be565433a50fa36ab10d))
+* **deps:** bump https://github.com/astral-sh/ruff-pre-commit from v0.16.5 to 0.17.0 ([357b251](https://github.com/nudam00/role-radar/commit/357b251de29f0a1045bffbf730ad268d3e79b6f4))
+* **deps:** bump https://github.com/astral-sh/ty-pre-commit ([2f86d21](https://github.com/nudam00/role-radar/commit/2f86d21f9b5a2a6f090ca6db89b3105349030c2a))
+* **deps:** bump https://github.com/astral-sh/ty-pre-commit from v0.0.85 to 0.0.86 ([4cf3337](https://github.com/nudam00/role-radar/commit/4cf333738df3ff7486cc053137cd57884afe8e31))
+
+## Changelog

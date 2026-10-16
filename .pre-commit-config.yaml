@@ -12,7 +12,7 @@ repos:
         name: Ruff format
         types_or: [python, pyi, jupyter, pyproject]
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.85
+    rev: v0.0.86
     hooks:
       - id: ty
         name: ty

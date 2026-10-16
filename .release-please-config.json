@@ -1,0 +1,79 @@
+{
+  "changelog-sections": [
+    {
+      "hidden": false,
+      "section": "Features",
+      "type": "feat"
+    },
+    {
+      "hidden": false,
+      "section": "Bug Fixes",
+      "type": "fix"
+    },
+    {
+      "hidden": false,
+      "section": "Build",
+      "type": "build"
+    },
+    {
+      "hidden": false,
+      "section": "CI/CD",
+      "type": "ci"
+    },
+    {
+      "hidden": false,
+      "section": "Reverts",
+      "type": "revert"
+    },
+    {
+      "hidden": true,
+      "section": "Style",
+      "type": "style"
+    },
+    {
+      "hidden": true,
+      "section": "Tests",
+      "type": "test"
+    },
+    {
+      "hidden": false,
+      "section": "Miscellaneous",
+      "type": "chore"
+    },
+    {
+      "hidden": false,
+      "section": "Documentation",
+      "type": "docs"
+    },
+    {
+      "hidden": false,
+      "section": "Code Refactoring",
+      "type": "refactor"
+    },
+    {
+      "hidden": false,
+      "section": "Performance Improvements",
+      "type": "perf"
+    }
+  ],
+  "commit-search-limit": 500,
+  "packages": {
+    ".": {
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "jsonpath": "$.project.version",
+          "path": "pyproject.toml",
+          "type": "toml"
+        }
+      ],
+      "package-name": "role-radar",
+      "release-type": "simple",
+      "versioning": "default"
+    }
+  },
+  "pull-request-title-pattern": "chore${scope}: release${component} v${version}",
+  "release-type": "simple"
+}

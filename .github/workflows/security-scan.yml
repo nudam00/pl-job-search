@@ -1,0 +1,123 @@
+name: Security Scan
+on:
+  workflow_call:
+    inputs:
+      fail-on-error:
+        description: "Fail workflow if a security scan fails"
+        required: false
+        type: boolean
+        default: true
+      python-version:
+        description: "Python version to use"
+        required: false
+        type: string
+        default: "3.14"
+jobs:
+  pip-audit:
+    name: Pip Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+      - name: Sync project dependencies
+        run: |
+          uv sync --frozen
+      - name: Run pip-audit
+        id: pip-audit
+        run: |
+          uv run --with pip-audit pip-audit --format json --output pip-audit-results.json || true
+          uv run --with pip-audit pip-audit --strict
+        continue-on-error: ${{ !inputs.fail-on-error }}
+      - name: Upload pip-audit results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pip-audit-results
+          path: pip-audit-results.json
+          retention-days: 5
+      - name: Set outputs
+        id: results
+        if: always()
+        run: echo "pip_audit=${{ steps.pip-audit.outcome }}" >> $GITHUB_OUTPUT
+    outputs:
+      pip_audit: ${{ steps.results.outputs.pip_audit }}
+  trivy:
+    name: Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Run trivy filesystem scan
+        id: trivy_fs
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          scanners: "vuln"
+          format: "json"
+          output: "trivy-results.json"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          exit-code: ${{ inputs.fail-on-error && '1' || '0' }}
+      - name: Run trivy secret scan
+        if: always()
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          scanners: "secret"
+          format: "json"
+          output: "trivy-secrets.json"
+          exit-code: "0"
+      - name: Check for secrets
+        id: check_secrets
+        if: always()
+        run: |
+          if [ ! -f trivy-secrets.json ]; then
+            echo "::error::Trivy secret scan did not produce a report"
+            exit 1
+          fi
+          secrets_found=$(jq -r '[.Results[]? | .Secrets[]?] | length' trivy-secrets.json)
+
+          echo "secrets_found=$secrets_found" >> $GITHUB_OUTPUT
+          if [ "$secrets_found" -gt 0 ]; then
+            echo "::error::Found $secrets_found secret(s) in the repository"
+            exit 1
+          fi
+        continue-on-error: ${{ !inputs.fail-on-error }}
+      - name: Upload trivy results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-results
+          path: trivy-results.json
+          retention-days: 5
+      - name: Set outputs
+        id: results
+        if: always()
+        run: |
+          echo "trivy_fs=${{ steps.trivy_fs.outcome }}" >> $GITHUB_OUTPUT
+          echo "trivy_secrets=${{ steps.check_secrets.outcome }}" >> $GITHUB_OUTPUT
+    outputs:
+      trivy_fs: ${{ steps.results.outputs.trivy_fs }}
+      trivy_secrets: ${{ steps.results.outputs.trivy_secrets }}
+  summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [pip-audit, trivy]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pip-Audit | ${{ needs.pip-audit.outputs.pip_audit == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trivy Filesystem | ${{ needs.trivy.outputs.trivy_fs == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trivy Secrets | ${{ needs.trivy.outputs.trivy_secrets == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY

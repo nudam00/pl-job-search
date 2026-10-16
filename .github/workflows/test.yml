@@ -1,0 +1,60 @@
+name: Test
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version to use"
+        required: false
+        type: string
+        default: "3.14"
+jobs:
+  python-tests:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+      - name: Sync project dependencies
+        run: uv sync --frozen
+      - name: Run pytest
+        id: pytest
+        run: |
+          uv run --frozen python -m pytest \
+            --cov=src \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            --cov-report=term-missing
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: |
+            coverage.xml
+            htmlcov/
+          retention-days: 5
+      - name: Set outputs
+        id: results
+        if: always()
+        run: echo "pytest=${{ steps.pytest.outcome }}" >> $GITHUB_OUTPUT
+    outputs:
+      pytest: ${{ steps.results.outputs.pytest }}
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [python-tests]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pytest | ${{ needs.python-tests.outputs.pytest == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY

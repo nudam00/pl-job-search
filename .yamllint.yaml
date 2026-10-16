@@ -1,0 +1,44 @@
+extends: default
+ignore: |
+  .venv/
+rules:
+  line-length:
+    max: 200
+    allow-non-breakable-inline-mappings: true
+    level: error
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: true
+    ignore-shebangs: true
+  comments-indentation: {}
+  document-start: disable
+  document-end: disable
+  truthy:
+    allowed-values: ["true", "false", "yes", "no", "on", "off"]
+    check-keys: false
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+  trailing-spaces: enable
+  key-duplicates: enable
+  new-line-at-end-of-file: enable
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+  commas:
+    max-spaces-before: 0
+    min-spaces-after: 1
+    max-spaces-after: 1
+  hyphens:
+    max-spaces-after: 1

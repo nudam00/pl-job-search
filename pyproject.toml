@@ -1,0 +1,77 @@
+[project]
+name = "role-radar"
+version = "0.1.0"
+description = "A tool for assessing job offers against a CV using a scoring rubric."
+readme = "README.md"
+authors = [{ name = "nudam00" }]
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.28.1", "pypdf>=6.20.1", "structlog>=25.5.0"]
+
+[dependency-groups]
+dev = ["pre-commit>=4.6.2", "pytest>=9.1.1", "pytest-cov>=7.1.0"]
+
+[tool.uv]
+package = false
+default-groups = ["dev"]
+
+[tool.ruff]
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D203", "D213", "COM812", "CPY001", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+  "D101",
+  "D102",
+  "S101",
+  "S105",
+  "FBT001",
+  "SIM117",
+  "PT012",
+  "SLF001",
+  "D100",
+  "INP001",
+  "ANN",
+  "PLR2004",
+  "RUF012",
+  "PLR0915",
+  "PLR0917",
+  "ARG002",
+  "PLR0913",
+  "D103",
+  "D107",
+]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 120
+
+[tool.ty.src]
+include = ["src"]
+
+[tool.ty.rules]
+blanket-ignore-comment = "error"
+dynamic-function-decorator-return = "error"
+missing-type-argument = "error"
+possibly-unresolved-reference = "warn"
+unsound-assignment = "error"
+unsound-return-statement = "error"
+unsound-yield = "error"
+unsupported-dynamic-base = "warn"
+
+[tool.ty.analysis]
+strict-equality-semantics = true
+strict-generic-narrowing = true
+
+[tool.pytest]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["--cov=src", "--import-mode=importlib"]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false

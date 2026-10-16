@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Python tooling caches
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Testing
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit*.xml
+.tox/
+.nox/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Project specific
+.env
+.env.*
+!.env.example
+*.profile.json
+
+# GCP credentials
+service-account*.json
+*-credentials.json
+*-key.json
+*.log
+tmp/
+temp/
+.tmp/
+data/
+.agents/
+.codex/
+skills-lock.json
+docker-compose.override.yml
+.prefect/

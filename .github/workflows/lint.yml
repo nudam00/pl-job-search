@@ -1,0 +1,91 @@
+name: Lint
+on:
+  workflow_call:
+    inputs:
+      fail-on-error:
+        description: "Fail workflow if linting fails"
+        required: false
+        type: boolean
+        default: true
+      python-version:
+        description: "Python version to use"
+        required: false
+        type: string
+        default: "3.14"
+jobs:
+  lint:
+    name: Pre-commit Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+      - name: Install project dependencies
+        run: |
+          uv sync --frozen
+      - name: Run pre-commit
+        id: precommit
+        run: uv run pre-commit run --all-files --show-diff-on-failure
+        continue-on-error: ${{ !inputs.fail-on-error }}
+      - name: Set outputs
+        id: results
+        if: always()
+        run: echo "precommit_lint=${{ steps.precommit.outcome }}" >> $GITHUB_OUTPUT
+    outputs:
+      precommit_lint: ${{ steps.results.outputs.precommit_lint }}
+  commit-lint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Validate PR Title
+        id: pr-title
+        uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          requireScope: false
+          subjectPattern: ^(?!.*\.$).+$
+          subjectPatternError: |
+            The subject "{subject}" was rejected by pattern "^(?!.*\.$).+$".
+            Please do not end the subject line with a period.
+          types: |
+            feat
+            fix
+            build
+            ci
+            revert
+            style
+            test
+            chore
+            docs
+            refactor
+            perf
+        continue-on-error: ${{ !inputs.fail-on-error }}
+      - name: Set outputs
+        id: results
+        if: always()
+        run: echo "commit_lint=${{ steps.pr-title.outcome }}" >> $GITHUB_OUTPUT
+    outputs:
+      commit_lint: ${{ steps.results.outputs.commit_lint }}
+  summary:
+    name: Lint Summary
+    runs-on: ubuntu-latest
+    needs: [lint, commit-lint]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# Lint Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pre-commit Lint | ${{ needs.lint.outputs.precommit_lint == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit Lint | ${{ needs.commit-lint.result == 'skipped' && '➖' || (needs.commit-lint.outputs.commit_lint == 'success' && '✅' || '❌') }} |" >> $GITHUB_STEP_SUMMARY

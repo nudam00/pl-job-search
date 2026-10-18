@@ -1,0 +1,12 @@
+{
+  "exclude_company_keywords": [
+    "example corp"
+  ],
+  "exclude_offer_urls": [
+    "https://example.com/jobs/123"
+  ],
+  "exclude_title_keywords": [
+    "qa",
+    "tester"
+  ]
+}

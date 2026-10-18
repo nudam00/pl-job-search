@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/nudam00/role-radar/compare/role-radar-v0.2.0...role-radar-v0.3.0) (2026-10-18)
+
+
+### Features
+
+* experience ceiling ([#6](https://github.com/nudam00/role-radar/issues/6)) ([5ac78ec](https://github.com/nudam00/role-radar/commit/5ac78ec9e0410be661137180446042144f8b46af))
+* offer exclusion ([9bf7bf3](https://github.com/nudam00/role-radar/commit/9bf7bf36317928d996bbfe12858c4f7a2e070611))
+* offer exclusion ([1cfe060](https://github.com/nudam00/role-radar/commit/1cfe06013421bad8e129ed15212e9b127840e772))
+
+
+### Documentation
+
+* example datafiles ([59552e3](https://github.com/nudam00/role-radar/commit/59552e319b8ea9e2de8a4ee80d13b8ab5b08150f))
+
 ## [0.2.0](https://github.com/nudam00/role-radar/compare/role-radar-v0.1.0...role-radar-v0.2.0) (2026-10-16)
 
 

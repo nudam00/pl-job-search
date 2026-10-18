@@ -1,13 +1,14 @@
 import csv
 import json
 import tempfile
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
 import httpx
 import pytest
 
-from src.assess_cli import main
+from src.assess_cli import _read_exclusions, main
 from src.domain import Assessment, Offer
 from src.infra.storage import JsonlStore
 
@@ -66,6 +67,101 @@ def response(score: float = 3.2) -> httpx.Response:
 
 class Pdf:
     pages = [type("Page", (), {"extract_text": lambda _self: "Python CV"})()]
+
+
+def test_exclusions_skip_scoring_and_shortlist() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        offers = root / "offers.jsonl"
+        cv = root / "cv.pdf"
+        history = root / "assessments.jsonl"
+        shortlist = root / "shortlist.csv"
+        exclusions = root / "exclusions.json"
+        cv.write_bytes(b"CV")
+        qa = offer("QA")
+        tester = offer("tester")
+        engineer = replace(offer("backend"), company=None)
+        reviewed = offer("reviewed")
+        company_match = replace(offer("partner"), company="ACME Systems")
+        JsonlStore(offers, Offer).write([qa, tester, engineer, reviewed, company_match])
+        exclusions.write_text(
+            json.dumps(
+                {
+                    "exclude_title_keywords": ["qa", "TESTER"],
+                    "exclude_company_keywords": ["acme"],
+                    "exclude_offer_urls": [reviewed.url],
+                }
+            ),
+            encoding="utf-8",
+        )
+        args = ["assess", str(offers), str(cv), str(history), str(shortlist)]
+
+        excluded_args = [*args, "--exclusions", str(exclusions)]
+        with (
+            patch("sys.argv", args),
+            patch("src.infra.cv.pdf_reader.PdfReader", return_value=Pdf()),
+            patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}),
+            patch(
+                "src.infra.openai.http_client.httpx.post", return_value=decision()
+            ) as http,
+        ):
+            with patch("sys.argv", excluded_args):
+                assert main() == 0
+            assert http.call_count == 1
+            assert main() == 0
+            assert http.call_count == 5
+            with patch("sys.argv", excluded_args):
+                assert main() == 0
+            assert http.call_count == 5
+
+        assert len(JsonlStore(history, Assessment).read()) == 5
+        with shortlist.open(newline="", encoding="utf-8") as file:
+            assert [row["url"] for row in csv.DictReader(file)] == [engineer.url]
+
+
+def test_exclusions_lists_may_be_empty(tmp_path: Path) -> None:
+    path = tmp_path / "exclusions.json"
+    path.write_text(
+        '{"exclude_title_keywords": [], "exclude_offer_urls": [], "exclude_company_keywords": []}',
+        encoding="utf-8",
+    )
+    assert _read_exclusions(path) == {
+        "exclude_title_keywords": [],
+        "exclude_offer_urls": [],
+        "exclude_company_keywords": [],
+    }
+
+
+@pytest.mark.parametrize(
+    "contents",
+    [
+        "{",
+        "[]",
+        '{"exclude_title_keywords": [], "exclude_offer_urls": []}',
+        '{"exclude_title_keywords": ["QA"], "exclude_offer_urls": [42]}',
+        '{"exclude_title_keywords": [""], "exclude_offer_urls": []}',
+        '{"exclude_title_keywords": [], "exclude_offer_urls": [], "exclude_company_keywords": [42]}',
+    ],
+)
+def test_invalid_exclusions_do_not_assess(contents: str) -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        exclusions = root / "exclusions.json"
+        exclusions.write_text(contents, encoding="utf-8")
+        with patch(
+            "sys.argv",
+            [
+                "assess",
+                str(root / "offers.jsonl"),
+                str(root / "cv.pdf"),
+                str(root / "assessments.jsonl"),
+                str(root / "shortlist.csv"),
+                "--exclusions",
+                str(exclusions),
+            ],
+        ):
+            assert main() == 1
+        assert not (root / "assessments.jsonl").exists()
 
 
 def test_history_shortlist_threshold_and_cv_change() -> None:

@@ -40,10 +40,16 @@ uv run python -m src.collect_cli data/listings.csv data/offers.jsonl
 Only `https://justjoin.it/job-offers/...` listing URLs are supported at present.
 Collection writes `data/offers-YYYY-MM-DD.jsonl` using your local date; a second run on the same day replaces that day's file.
 
+Copy [the example exclusions file](examples/exclusions.json) and edit its lists of title keywords, company keywords, and offer URLs:
+
+```bash
+cp -n examples/exclusions.json data/exclusions.json
+```
+
 Put a text-based PDF CV at `data/cv.pdf`, set `OPENAI_API_KEY` in your environment, and assess the snapshot:
 
 ```bash
-uv run python -m src.assess_cli data/offers-YYYY-MM-DD.jsonl data/cv.pdf data/assessments.jsonl data/shortlist.csv --threshold 2.0
+uv run python -m src.assess_cli data/offers-YYYY-MM-DD.jsonl data/cv.pdf data/assessments.jsonl data/shortlist.csv --threshold 2.0 --exclusions data/exclusions.json --max-required-years 5
 ```
 
 If you have [`just`](https://github.com/casey/just), you can use the shorter commands:
@@ -54,30 +60,12 @@ just collect
 just assess data/offers-YYYY-MM-DD.jsonl
 ```
 
-Replace `YYYY-MM-DD` with the actual filename date. Scores range from 0 to 4, and the CLI's default threshold is 2.0.
-The ceiling for **required** experience defaults to 5 years. Use `--max-required-years N` to change it.
-Requirements of 5 years or fewer stay eligible, including 1-year roles and offers saying `5+ years`.
-The scorer assigns No fit to a clear requirement above 5 years; a higher number stated only as preferred is weighed against the technical match.
-Offers without a clear minimum are assessed normally.
-Changing the value reassesses offers because saved scores are tied to the chosen ceiling.
-To skip unwanted titles, companies, and offers already reviewed, copy [the example exclusions file](examples/exclusions.json) to `data/exclusions.json`, then edit its lists:
-
-```bash
-mkdir -p data
-cp -n examples/exclusions.json data/exclusions.json
-```
-
-Pass the file when assessing:
-
-```bash
-uv run python -m src.assess_cli data/offers-YYYY-MM-DD.jsonl data/cv.pdf data/assessments.jsonl data/shortlist.csv --exclusions data/exclusions.json
-```
-
-`just assess` uses `data/exclusions.json`. Use the direct CLI command above to choose another file.
-
-Title and company keyword matching ignore case and check only their respective fields. Offer URLs match exactly.
-Excluded offers are not scored or included in the shortlist; existing assessment history is preserved.
-All three lists are required but may be empty. Files in `data/` are ignored by Git.
+Replace `YYYY-MM-DD` with the actual filename date. Scores range from 0 to 4; the default shortlist threshold is 2.0.
+With `--max-required-years 5`, requirements up to and including `5+ years` remain eligible.
+A clear requirement of 6 or more years scores No fit; higher years listed only as preferred remain eligible.
+Change the number to suit your experience.
+The exclusions file keeps matching titles, companies, and URLs out of scoring and the shortlist. Its three lists may be empty. Files in `data/` are ignored by Git.
+`just assess` uses the same exclusions file and five-year ceiling.
 If the PDF contains no selectable text, run OCR on it first. Assessment sends the extracted CV text and offer details to OpenAI and can incur API charges.
 
 If you already have offer data, skip collection and pass your own JSONL file as the first argument to the assessment command.

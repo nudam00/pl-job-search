@@ -33,8 +33,8 @@ collect listings="data/listings.csv" output="data/offers.jsonl":
     uv run python -m src.collect_cli {{listings}} {{output}}
 
 # Run assessment
-assess offers cv="data/cv.pdf" history="data/assessments.jsonl" shortlist="data/shortlist.csv" threshold="2.0" exclusions="data/exclusions.json":
-    uv run python -m src.assess_cli {{offers}} {{cv}} {{history}} {{shortlist}} --threshold {{threshold}} --exclusions {{exclusions}}
+assess offers cv="data/cv.pdf" history="data/assessments.jsonl" shortlist="data/shortlist.csv" threshold="2.0" exclusions="data/exclusions.json" max_required_years="5":
+    uv run python -m src.assess_cli {{offers}} {{cv}} {{history}} {{shortlist}} --threshold {{threshold}} --exclusions {{exclusions}} --max-required-years {{max_required_years}}
 
 # Clean build artifacts and caches
 clean:

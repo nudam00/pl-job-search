@@ -214,6 +214,52 @@ def test_history_shortlist_threshold_and_cv_change() -> None:
             assert len(list(csv.DictReader(file))) == 0
 
 
+def test_max_required_years_changes_prompt_and_assessment_reuse() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        offers = root / "offers.jsonl"
+        history = root / "assessments.jsonl"
+        cv = root / "cv.pdf"
+        cv.write_bytes(b"CV")
+        JsonlStore(offers, Offer).write([offer("backend")])
+        args = [
+            "assess",
+            str(offers),
+            str(cv),
+            str(history),
+            str(root / "shortlist.csv"),
+        ]
+        instructions = []
+
+        def post(_url, **kwargs):
+            instructions.append(kwargs["json"]["questions"][0]["instructions"])
+            return decision()
+
+        with (
+            patch("src.infra.cv.pdf_reader.PdfReader", return_value=Pdf()),
+            patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}),
+            patch("src.infra.openai.http_client.httpx.post", side_effect=post),
+        ):
+            for years in (None, 5, 3):
+                cli_args = (
+                    args
+                    if years is None
+                    else [*args, "--max-required-years", str(years)]
+                )
+                with patch("sys.argv", cli_args):
+                    assert main() == 0
+
+        assert len(instructions) == 2
+        assert "more than 5 years" in instructions[0]
+        assert "Requirements of 5 years or less remain eligible" in instructions[0]
+        assert "5+ years is eligible" in instructions[0]
+        assert "preferred" in instructions[0]
+        assert "more than 3 years" in instructions[1]
+        records = JsonlStore(history, Assessment).read()
+        assert len(records) == 2
+        assert records[0].rubric_version != records[1].rubric_version
+
+
 def test_unretryable_decisions_limit_uses_responses_for_remaining_offers() -> None:
     limit = httpx.Response(
         429,
@@ -237,6 +283,8 @@ def test_unretryable_decisions_limit_uses_responses_for_remaining_offers() -> No
                     str(cv),
                     str(history),
                     str(root / "shortlist.csv"),
+                    "--max-required-years",
+                    "5",
                 ],
             ),
             patch("src.infra.cv.pdf_reader.PdfReader", return_value=Pdf()),
@@ -253,6 +301,8 @@ def test_unretryable_decisions_limit_uses_responses_for_remaining_offers() -> No
             "responses",
             "responses",
         ]
+        for call in http.call_args_list[1:]:
+            assert "more than 5 years" in call.kwargs["json"]["input"][0]["content"]
 
 
 def test_quota_error_keeps_history_for_next_run() -> None:

@@ -55,6 +55,11 @@ just assess data/offers-YYYY-MM-DD.jsonl
 ```
 
 Replace `YYYY-MM-DD` with the actual filename date. Scores range from 0 to 4, and the CLI's default threshold is 2.0.
+The ceiling for **required** experience defaults to 5 years. Use `--max-required-years N` to change it.
+Requirements of 5 years or fewer stay eligible, including 1-year roles and offers saying `5+ years`.
+The scorer assigns No fit to a clear requirement above 5 years; a higher number stated only as preferred is weighed against the technical match.
+Offers without a clear minimum are assessed normally.
+Changing the value reassesses offers because saved scores are tied to the chosen ceiling.
 To skip unwanted titles, companies, and offers already reviewed, copy [the example exclusions file](examples/exclusions.json) to `data/exclusions.json`, then edit its lists:
 
 ```bash

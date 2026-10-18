@@ -1,6 +1,6 @@
 [project]
 name = "role-radar"
-version = "0.2.0"
+version = "0.3.0"
 description = "A tool for assessing job offers against a CV using a scoring rubric."
 readme = "README.md"
 authors = [{ name = "nudam00" }]

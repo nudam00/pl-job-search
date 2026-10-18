@@ -29,9 +29,11 @@ From the repository root, install dependencies:
 uv sync --frozen
 ```
 
-Create the `data/` directory and a `data/listings.csv` file with a `url` header and permitted listing URLs, then collect:
+Copy [the example listings file](examples/listings.csv) to `data/listings.csv`, replace its URL with permitted listing URLs, then collect:
 
 ```bash
+mkdir -p data
+cp examples/listings.csv data/listings.csv
 uv run python -m src.collect_cli data/listings.csv data/offers.jsonl
 ```
 
@@ -53,6 +55,24 @@ just assess data/offers-YYYY-MM-DD.jsonl
 ```
 
 Replace `YYYY-MM-DD` with the actual filename date. Scores range from 0 to 4, and the CLI's default threshold is 2.0.
+To skip unwanted titles, companies, and offers already reviewed, copy [the example exclusions file](examples/exclusions.json) to `data/exclusions.json`, then edit its lists:
+
+```bash
+mkdir -p data
+cp -n examples/exclusions.json data/exclusions.json
+```
+
+Pass the file when assessing:
+
+```bash
+uv run python -m src.assess_cli data/offers-YYYY-MM-DD.jsonl data/cv.pdf data/assessments.jsonl data/shortlist.csv --exclusions data/exclusions.json
+```
+
+`just assess` uses `data/exclusions.json`. Use the direct CLI command above to choose another file.
+
+Title and company keyword matching ignore case and check only their respective fields. Offer URLs match exactly.
+Excluded offers are not scored or included in the shortlist; existing assessment history is preserved.
+All three lists are required but may be empty. Files in `data/` are ignored by Git.
 If the PDF contains no selectable text, run OCR on it first. Assessment sends the extracted CV text and offer details to OpenAI and can incur API charges.
 
 If you already have offer data, skip collection and pass your own JSONL file as the first argument to the assessment command.

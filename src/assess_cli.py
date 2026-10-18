@@ -1,8 +1,10 @@
 """Command line interface for assessing job offers against a CV PDF."""
 
 import argparse
+import json
 import os
 from pathlib import Path
+from typing import TypedDict, cast
 
 import structlog
 
@@ -27,11 +29,43 @@ from .log_setup import configure_logging
 log = structlog.get_logger(__name__)
 
 
+class Exclusions(TypedDict):
+    """Structure of the exclusions JSON file."""
+
+    exclude_title_keywords: list[str]
+    exclude_offer_urls: list[str]
+    exclude_company_keywords: list[str]
+
+
 def _create_scorer() -> MatchScorer:
     client = OpenAIHttpClient(os.environ["OPENAI_API_KEY"])
     return FallbackMatchScorer(
         OpenAIDecisionsScorer(client), OpenAIResponsesScorer(client)
     )
+
+
+def _read_exclusions(path: Path) -> Exclusions:
+    exclusions = json.loads(path.read_text(encoding="utf-8"))
+    required = {
+        "exclude_title_keywords",
+        "exclude_offer_urls",
+        "exclude_company_keywords",
+    }
+    if (
+        not isinstance(exclusions, dict)
+        or set(exclusions) != required
+        or any(
+            not isinstance(exclusions[key], list)
+            or any(
+                not isinstance(item, str) or not item.strip()
+                for item in exclusions[key]
+            )
+            for key in exclusions
+        )
+    ):
+        msg = "Exclusions must contain exclude_title_keywords, exclude_offer_urls, and exclude_company_keywords lists of nonempty strings"
+        raise ValueError(msg)
+    return cast("Exclusions", exclusions)
 
 
 def main() -> int:
@@ -48,16 +82,42 @@ def main() -> int:
         default=2.0,
         help="Minimum score from 0 to 4 (default: 2.0)",
     )
+    parser.add_argument("--exclusions", type=Path, help="Exclusions JSON file")
     args = parser.parse_args()
     max_score = len(LEVELS) - 1
     if not 0 <= args.threshold <= max_score:
         parser.error(f"--threshold must be between 0 and {max_score}")
     try:
+        exclusions: Exclusions = (
+            _read_exclusions(args.exclusions)
+            if args.exclusions
+            else {
+                "exclude_title_keywords": [],
+                "exclude_offer_urls": [],
+                "exclude_company_keywords": [],
+            }
+        )
         offers = JsonlStore(args.offers, Offer).read()
+        excluded_urls = set(exclusions["exclude_offer_urls"]) | {
+            offer.url
+            for offer in offers
+            if any(
+                keyword.casefold() in offer.title.casefold()
+                for keyword in exclusions["exclude_title_keywords"]
+            )
+            or any(
+                keyword.casefold() in (offer.company or "").casefold()
+                for keyword in exclusions["exclude_company_keywords"]
+            )
+        }
         cv_hash, cv_text = PdfCvReader(args.cv).read()
         history_store = JsonlStore(args.history, Assessment)
         history = history_store.read(missing_ok=True)
-        pending = pending_offers(offers, history, cv_hash)
+        pending = pending_offers(
+            [offer for offer in offers if offer.url not in excluded_urls],
+            history,
+            cv_hash,
+        )
         if pending and not os.environ.get("OPENAI_API_KEY"):
             log.error(
                 "assessment_failed", error="Set OPENAI_API_KEY to assess new offers"
@@ -78,7 +138,14 @@ def main() -> int:
         for error in errors:
             log.error("assessment_failed", error=error)
         selected = CsvStore.write_shortlist(
-            args.shortlist, shortlist_assessments(history, cv_hash, args.threshold)
+            args.shortlist,
+            [
+                assessment
+                for assessment in shortlist_assessments(
+                    history, cv_hash, args.threshold
+                )
+                if assessment.url not in excluded_urls
+            ],
         )
     except (OSError, ValueError) as exc:
         log.exception("assessment_failed", error=str(exc))

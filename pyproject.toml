@@ -1,5 +1,5 @@
 [project]
-name = "role-radar"
+name = "pl-job-search"
 version = "0.3.0"
 description = "A tool for assessing job offers against a CV using a scoring rubric."
 readme = "README.md"

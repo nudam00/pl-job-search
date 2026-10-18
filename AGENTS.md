@@ -1,4 +1,4 @@
-# Working in Role Radar
+# Working in PL Job Search
 
 Read `README.md` for setup and CLI usage, and `CONTEXT.md` for project terms.
 Keep changes small and follow the existing separation:

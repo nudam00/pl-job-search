@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/nudam00/pl-job-search/compare/pl-job-search-v0.3.0...pl-job-search-v0.3.1) (2026-10-18)
+
+
+### Miscellaneous
+
+* rename project to pl-job-search ([#7](https://github.com/nudam00/pl-job-search/issues/7)) ([543972b](https://github.com/nudam00/pl-job-search/commit/543972bb75f8eb7bb8fd2cd13abac41ca7a4e77b))
+* rename to pl job search ([#9](https://github.com/nudam00/pl-job-search/issues/9)) ([e3c64e5](https://github.com/nudam00/pl-job-search/commit/e3c64e50e7128668bcbe62da1a1ef583df49ea4c))
+
 ## [0.3.0](https://github.com/nudam00/role-radar/compare/role-radar-v0.2.0...role-radar-v0.3.0) (2026-10-18)
 
 

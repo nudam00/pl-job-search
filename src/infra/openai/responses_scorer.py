@@ -3,7 +3,7 @@
 import json
 from typing import Any
 
-from src.application.rubric import LEVELS, SCORING_INSTRUCTIONS
+from src.application.rubric import LEVELS, scoring_instructions
 from src.domain import Offer
 
 from .http_client import REQUEST_TIMEOUT_SECONDS, OpenAIHttpClient, OpenAIHttpError
@@ -14,14 +14,18 @@ MODEL_NAME = "gpt-5.6-luna"
 class OpenAIResponsesScorer:
     """Scorer for evaluating CVs against job offers using OpenAI responses."""
 
-    def __init__(self, client: OpenAIHttpClient) -> None:
+    def __init__(
+        self, client: OpenAIHttpClient, max_required_years: int | None = None
+    ) -> None:
         """Initialize the OpenAIResponsesScorer with an OpenAI HTTP client.
 
         Args:
             client (OpenAIHttpClient): An instance of OpenAIHttpClient for making API requests.
+            max_required_years (int | None): Maximum required experience in years, if set.
 
         """
         self.client = client
+        self.max_required_years = max_required_years
 
     def score(self, cv_text: str, offer: Offer) -> tuple[float, float]:
         """Return the match score and confidence for an offer.
@@ -72,7 +76,7 @@ class OpenAIResponsesScorer:
             "input": [
                 {
                     "role": "system",
-                    "content": SCORING_INSTRUCTIONS
+                    "content": scoring_instructions(self.max_required_years)
                     + " Return a score from 0 to 4 using these levels: "
                     + json.dumps(LEVELS, ensure_ascii=False)
                     + ". A fractional score is allowed. Return confidence from 0 to 1 for how well the available evidence supports the score.",

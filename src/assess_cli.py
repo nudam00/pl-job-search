@@ -10,6 +10,7 @@ import structlog
 
 from .application import (
     LEVELS,
+    RUBRIC_VERSION,
     FallbackMatchScorer,
     MatchScorer,
     assess_pending,
@@ -37,10 +38,11 @@ class Exclusions(TypedDict):
     exclude_company_keywords: list[str]
 
 
-def _create_scorer() -> MatchScorer:
+def _create_scorer(max_required_years: int | None) -> MatchScorer:
     client = OpenAIHttpClient(os.environ["OPENAI_API_KEY"])
     return FallbackMatchScorer(
-        OpenAIDecisionsScorer(client), OpenAIResponsesScorer(client)
+        OpenAIDecisionsScorer(client, max_required_years),
+        OpenAIResponsesScorer(client, max_required_years),
     )
 
 
@@ -83,10 +85,19 @@ def main() -> int:
         help="Minimum score from 0 to 4 (default: 2.0)",
     )
     parser.add_argument("--exclusions", type=Path, help="Exclusions JSON file")
+    parser.add_argument(
+        "--max-required-years",
+        type=int,
+        default=5,
+        help="Score clear requirements above this many years as No fit (default: 5)",
+    )
     args = parser.parse_args()
     max_score = len(LEVELS) - 1
     if not 0 <= args.threshold <= max_score:
         parser.error(f"--threshold must be between 0 and {max_score}")
+    if args.max_required_years < 0:
+        parser.error("--max-required-years must be nonnegative")
+    rubric_version = f"{RUBRIC_VERSION}:max-required-years={args.max_required_years}"
     try:
         exclusions: Exclusions = (
             _read_exclusions(args.exclusions)
@@ -117,6 +128,7 @@ def main() -> int:
             [offer for offer in offers if offer.url not in excluded_urls],
             history,
             cv_hash,
+            rubric_version,
         )
         if pending and not os.environ.get("OPENAI_API_KEY"):
             log.error(
@@ -129,8 +141,9 @@ def main() -> int:
                 cv_text,
                 cv_hash,
                 history,
-                _create_scorer(),
+                _create_scorer(args.max_required_years),
                 history_store.write,
+                rubric_version,
             )
             if pending
             else (0, [])
@@ -142,7 +155,7 @@ def main() -> int:
             [
                 assessment
                 for assessment in shortlist_assessments(
-                    history, cv_hash, args.threshold
+                    history, cv_hash, args.threshold, rubric_version
                 )
                 if assessment.url not in excluded_urls
             ],

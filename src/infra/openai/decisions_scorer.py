@@ -9,7 +9,7 @@ from typing import Any
 import structlog
 
 from src.application.ports import ScorerUnavailableError
-from src.application.rubric import LEVELS, SCORING_INSTRUCTIONS
+from src.application.rubric import LEVELS, scoring_instructions
 from src.domain import Offer
 
 from .http_client import REQUEST_TIMEOUT_SECONDS, OpenAIHttpClient, OpenAIHttpError
@@ -35,14 +35,18 @@ class DecisionRateLimitError(ScorerUnavailableError):
 class OpenAIDecisionsScorer:
     """Scorer for evaluating CVs against job offers using OpenAI Decisions API."""
 
-    def __init__(self, client: OpenAIHttpClient) -> None:
+    def __init__(
+        self, client: OpenAIHttpClient, max_required_years: int | None = None
+    ) -> None:
         """Initialize the OpenAIDecisionsScorer with an OpenAI HTTP client.
 
         Args:
             client (OpenAIHttpClient): The HTTP client for interacting with the OpenAI API.
+            max_required_years (int | None): Maximum required experience in years, if set.
 
         """
         self.client = client
+        self.max_required_years = max_required_years
         self._last_request = 0.0
 
     def score(self, cv_text: str, offer: Offer) -> tuple[float, float]:
@@ -91,7 +95,7 @@ class OpenAIDecisionsScorer:
                 {
                     "type": "score",
                     "name": "match",
-                    "instructions": SCORING_INSTRUCTIONS,
+                    "instructions": scoring_instructions(self.max_required_years),
                     "levels": LEVELS,
                 }
             ],

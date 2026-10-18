@@ -1,4 +1,4 @@
-# Role Radar
+# PL Job Search
 
 Collect job offers from listing pages and score them against a PDF CV.
 Assessment uses OpenAI Decisions, with a Responses fallback when a Decisions rate limit cannot be retried during the run.

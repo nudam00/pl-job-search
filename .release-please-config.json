@@ -62,6 +62,7 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": false,
       "changelog-path": "CHANGELOG.md",
+      "component": "role-radar",
       "extra-files": [
         {
           "jsonpath": "$.project.version",
@@ -69,7 +70,7 @@
           "type": "toml"
         }
       ],
-      "package-name": "role-radar",
+      "package-name": "pl-job-search",
       "release-type": "simple",
       "versioning": "default"
     }

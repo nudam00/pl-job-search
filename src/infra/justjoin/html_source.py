@@ -24,7 +24,7 @@ class JustJoinHtmlSource:
         self.delay_seconds = delay_seconds
         self._last_request = 0.0
         self.client = httpx.Client(
-            headers={"User-Agent": "role-radar/0.1", "Accept-Language": "en"},
+            headers={"User-Agent": "pl-job-search/0.1", "Accept-Language": "en"},
             timeout=20,
             follow_redirects=False,
         )

@@ -1,1 +1,1 @@
-"""Role Radar application package."""
+"""PL Job Search application package."""

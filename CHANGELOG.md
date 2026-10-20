@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/nudam00/pl-job-search/compare/pl-job-search-v0.3.1...pl-job-search-v0.3.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* prioritize description in offer scoring ([#13](https://github.com/nudam00/pl-job-search/issues/13)) ([6114275](https://github.com/nudam00/pl-job-search/commit/6114275cc4d04ec1e59c981d8243776cca4f8dd4))
+
 ## [0.3.1](https://github.com/nudam00/pl-job-search/compare/pl-job-search-v0.3.0...pl-job-search-v0.3.1) (2026-10-18)
 
 

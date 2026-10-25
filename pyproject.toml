@@ -1,6 +1,6 @@
 [project]
 name = "pl-job-search"
-version = "0.3.2"
+version = "0.4.0"
 description = "A tool for assessing job offers against a CV using a scoring rubric."
 readme = "README.md"
 authors = [{ name = "nudam00" }]

@@ -1,7 +1,6 @@
 import json
 import tempfile
 from contextlib import closing
-from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -27,13 +26,7 @@ def page(document: dict[str, object], next_link: str = "") -> str:
     )
 
 
-def test_collects_pages_deduplicates_and_replaces_todays_file() -> None:
-
-    class FixedDatetime(datetime):
-        @classmethod
-        def now(cls, tz=None) -> "FixedDatetime":
-            return cls(2026, 10, 15, 12, tzinfo=tz)
-
+def test_collects_pages_and_skips_saved_offer_details() -> None:
     html = {
         LISTING: page(
             {
@@ -67,10 +60,26 @@ def test_collects_pages_deduplicates_and_replaces_todays_file() -> None:
         listings = root / "listings.csv"
         listings.write_text(f"url\n{LISTING}\n{LISTING}\n", encoding="utf-8")
         output = root / "offers.jsonl"
-        output.write_text("existing output\n", encoding="utf-8")
+        output.write_text(
+            json.dumps(
+                {
+                    "url": OFFER_ONE,
+                    "title": "Saved AI Engineer",
+                    "company": "Example",
+                    "location": None,
+                    "date_posted": None,
+                    "valid_through": None,
+                    "employment_type": None,
+                    "description": "Saved description",
+                    "salary": None,
+                    "source_url": LISTING,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         with (
             patch("sys.argv", ["collect", str(listings), str(output)]),
-            patch("src.collect_cli.datetime", FixedDatetime),
             patch(
                 "src.infra.justjoin.html_source.JustJoinHtmlSource._get",
                 side_effect=lambda url: html[url],
@@ -79,14 +88,14 @@ def test_collects_pages_deduplicates_and_replaces_todays_file() -> None:
             assert main() == 0
             assert main() == 0
 
-        local_date = FixedDatetime.now(UTC).astimezone().date().isoformat()
-        snapshot = root / f"offers-{local_date}.jsonl"
-        offers = [json.loads(line) for line in snapshot.read_text().splitlines()]
+        offers = [json.loads(line) for line in output.read_text().splitlines()]
         assert [item["url"] for item in offers] == [OFFER_ONE, OFFER_TWO]
         assert offers[0]["company"] == "Example"
+        assert offers[0]["title"] == "Saved AI Engineer"
         assert offers[1]["source_url"] == PAGE_TWO
-        assert output.read_text() == "existing output\n"
-        assert fetch.call_count == 8
+        assert fetch.call_count == 5
+        assert [call.args[0] for call in fetch.call_args_list].count(OFFER_ONE) == 0
+        assert [call.args[0] for call in fetch.call_args_list].count(OFFER_TWO) == 1
 
 
 def test_rejects_unsupported_host_before_fetching() -> None:

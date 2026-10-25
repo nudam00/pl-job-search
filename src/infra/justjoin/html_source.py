@@ -1,6 +1,7 @@
 """Collects offers from Just Join IT listing and detail pages."""
 
 import time
+from collections.abc import Iterator
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
@@ -30,17 +31,20 @@ class JustJoinHtmlSource:
         )
 
     def close(self) -> None:
-        """Close the shared HTTP connection pool."""
+        """Close the HTTP connection pool."""
         self.client.close()
 
-    def collect(self, listing_url: str) -> list[Offer]:
+    def collect(
+        self, listing_url: str, known_urls: set[str] | None = None
+    ) -> Iterator[Offer]:
         """Return offers from the given listing URL.
 
         Args:
             listing_url (str): The URL of the listing to collect offers from.
+            known_urls (set[str]): Offer URLs already saved or collected.
 
         Returns:
-            list[Offer]: A list of offers collected from the listing URL.
+            Iterable[Offer]: An iterable of offers collected from the listing URL.
 
         Raises:
             ValueError: If there is a pagination loop or unexpected URL format.
@@ -54,9 +58,8 @@ class JustJoinHtmlSource:
         ):
             msg = f"Not a Just Join IT listing URL: {listing_url}"
             raise ValueError(msg)
-        offers: list[Offer] = []
         seen_pages: set[str] = set()
-        seen_offers: set[str] = set()
+        seen_offers: set[str] = set(known_urls or ())
         page_url: str | None = listing_url
         while page_url:
             if page_url in seen_pages:
@@ -66,8 +69,9 @@ class JustJoinHtmlSource:
             items, next_url = self._listing(page_url)
             for item in items:
                 if item["url"] not in seen_offers:
-                    offers.append(self._offer(item, page_url))
+                    offer = self._offer(item, page_url)
                     seen_offers.add(item["url"])
+                    yield offer
             if next_url:
                 parsed = urlparse(next_url)
                 if (
@@ -78,7 +82,6 @@ class JustJoinHtmlSource:
                     msg = f"Unexpected next page URL: {next_url}"
                     raise ValueError(msg)
             page_url = next_url
-        return offers
 
     def _listing(self, url: str) -> tuple[list[dict[str, Any]], str | None]:
         parser = JsonLdParser()

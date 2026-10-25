@@ -1,11 +1,11 @@
 # Job offer collection
 
-The application collects offers shown on selected Just Join IT listing pages.
+The application collects offers shown on selected Just Join IT and No Fluff Jobs listing pages.
 
 ## Language
 
 **Listing**:
-A filtered Just Join IT page that identifies a set of job offers.
+A filtered job site page that identifies a set of job offers.
 _Avoid_: Search, category
 
 **Offer**:

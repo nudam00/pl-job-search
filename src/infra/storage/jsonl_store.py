@@ -1,6 +1,7 @@
 """Read and write JSONL files."""
 
 import json
+import os
 import tempfile
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
@@ -72,3 +73,28 @@ class JsonlStore(Generic[T]):
         finally:
             if temporary_path is not None:
                 temporary_path.unlink(missing_ok=True)
+
+    def append(self, record: T) -> None:
+        """Durably append one record to the JSONL file.
+
+        Args:
+            record (T): The record to append.
+
+        Raises:
+            TypeError: If the record is not a dataclass instance.
+
+        """
+        if isinstance(record, type) or not is_dataclass(record):
+            msg = "JSONL records must be dataclass instances"
+            raise TypeError(msg)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.open("a+b") as file:
+            if file.tell():
+                file.seek(-1, os.SEEK_END)
+                if file.read(1) != b"\n":
+                    file.write(b"\n")
+            file.write(
+                (json.dumps(asdict(record), ensure_ascii=False) + "\n").encode("utf-8")
+            )
+            file.flush()
+            os.fsync(file.fileno())

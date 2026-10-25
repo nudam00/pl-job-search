@@ -14,11 +14,12 @@ class ScorerUnavailableError(RuntimeError):
 class OfferSource(Protocol):
     """Collect offers from a listing."""
 
-    def collect(self, listing_url: str) -> Iterable[Offer]:
+    def collect(self, listing_url: str, known_urls: set[str]) -> Iterable[Offer]:
         """Return offers from the given listing URL.
 
         Args:
             listing_url (str): The URL of the listing to collect offers from.
+            known_urls (set[str]): Offer URLs already saved or collected.
 
         Returns:
             Iterable[Offer]: An iterable of offers collected from the listing URL.

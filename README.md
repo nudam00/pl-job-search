@@ -37,8 +37,8 @@ cp examples/listings.csv data/listings.csv
 uv run python -m src.collect_cli data/listings.csv data/offers.jsonl
 ```
 
-Only `https://justjoin.it/job-offers/...` listing URLs are supported at present.
-Collection writes `data/offers-YYYY-MM-DD.jsonl` using your local date; a second run on the same day replaces that day's file.
+The collector supports Just Join IT (`https://justjoin.it/job-offers/...`) and No Fluff Jobs (`https://nofluffjobs.com/pl/...`) listing URLs.
+Offers are appended to `data/offers.jsonl` as they are collected. Later runs preserve saved offers and fetch details only for new URLs, so interrupted runs can resume.
 
 Copy [the example exclusions file](examples/exclusions.json) and edit its lists of title keywords, company keywords, and offer URLs:
 
@@ -49,7 +49,7 @@ cp -n examples/exclusions.json data/exclusions.json
 Put a text-based PDF CV at `data/cv.pdf`, set `OPENAI_API_KEY` in your environment, and assess the snapshot:
 
 ```bash
-uv run python -m src.assess_cli data/offers-YYYY-MM-DD.jsonl data/cv.pdf data/assessments.jsonl data/shortlist.csv --threshold 2.0 --exclusions data/exclusions.json --max-required-years 5
+uv run python -m src.assess_cli data/offers.jsonl data/cv.pdf data/assessments.jsonl data/shortlist.csv --threshold 2.0 --exclusions data/exclusions.json --max-required-years 5
 ```
 
 If you have [`just`](https://github.com/casey/just), you can use the shorter commands:
@@ -57,15 +57,14 @@ If you have [`just`](https://github.com/casey/just), you can use the shorter com
 ```bash
 just install-dev
 just collect
-just assess data/offers-YYYY-MM-DD.jsonl
+just assess data/offers.jsonl
 ```
 
-Replace `YYYY-MM-DD` with the actual filename date. Scores range from 0 to 4; the default shortlist threshold is 2.0.
+Scores range from 0 to 4; the default shortlist threshold is 2.0.
 With `--max-required-years 5`, requirements up to and including `5+ years` remain eligible.
 A clear requirement of 6 or more years scores No fit; higher years listed only as preferred remain eligible.
 Change the number to suit your experience.
 The exclusions file keeps matching titles, companies, and URLs out of scoring and the shortlist. Its three lists may be empty. Files in `data/` are ignored by Git.
-`just assess` uses the same exclusions file and five-year ceiling.
 If the PDF contains no selectable text, run OCR on it first. Assessment sends the extracted CV text and offer details to OpenAI and can incur API charges.
 
 If you already have offer data, skip collection and pass your own JSONL file as the first argument to the assessment command.
@@ -98,10 +97,17 @@ Extracted CV text is cached beside the PDF as `cv.profile.json` and refreshed wh
 
 ## Development
 
-Run the integration tests with:
+Run the tests and repository checks with:
 
 ```bash
 uv run --frozen python -m pytest -q
+uv run --frozen pre-commit run --all-files
+```
+
+If you have [`just`](https://github.com/casey/just), you can use the shorter commands:
+
+```bash
+just check
 ```
 
 The code has `domain/` records, `application/` workflows and ports, and `infra/` adapters.

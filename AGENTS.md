@@ -1,7 +1,8 @@
 # Working in PL Job Search
 
 Read `README.md` for setup and CLI usage, and `CONTEXT.md` for project terms.
-Keep changes small and follow the existing separation:
+Keep changes small and follow the existing design and separation. Before adding a new module or pattern, check the analogous code and use its structure:
+Write docstrings in the same style and level of detail as analogous code, including argument, return, and error sections where the existing code uses them.
 
 - `src/domain/` holds `Offer` and `Assessment` records. It has no infrastructure dependencies.
 - `src/application/` holds collection and assessment workflows, scorer selection, and ports.

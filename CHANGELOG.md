@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/nudam00/pl-job-search/compare/pl-job-search-v0.3.2...pl-job-search-v0.4.0) (2026-10-25)
+
+
+### Features
+
+* nofluff ([#15](https://github.com/nudam00/pl-job-search/issues/15)) ([fb479fc](https://github.com/nudam00/pl-job-search/commit/fb479fcbf7221b92f7edc51e7cd69ffb7197ed23))
+
+
+### Miscellaneous
+
+* **deps:** bump https://github.com/astral-sh/ruff-pre-commit ([#12](https://github.com/nudam00/pl-job-search/issues/12)) ([acd7e11](https://github.com/nudam00/pl-job-search/commit/acd7e1121a064337f2c1b1b5a30a285f43b5db7b))
+* **deps:** bump https://github.com/astral-sh/ty-pre-commit ([#11](https://github.com/nudam00/pl-job-search/issues/11)) ([d205c54](https://github.com/nudam00/pl-job-search/commit/d205c54973da1491304e8483924839e7e28698b7))
+
 ## [0.3.2](https://github.com/nudam00/pl-job-search/compare/pl-job-search-v0.3.1...pl-job-search-v0.3.2) (2026-10-20)
 
 

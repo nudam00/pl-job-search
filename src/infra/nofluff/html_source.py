@@ -12,8 +12,9 @@ import httpx
 import structlog
 
 from src.domain import Offer
+from src.infra.text_parser import TextParser
 
-from .state_parser import StateParser, TextParser
+from .state_parser import StateParser
 
 log = structlog.get_logger(__name__)
 HTTP_TOO_MANY_REQUESTS = 429

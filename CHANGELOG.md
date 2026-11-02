@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/nudam00/pl-job-search/compare/pl-job-search-v0.4.0...pl-job-search-v0.5.0) (2026-11-02)
+
+
+### Features
+
+* theprotocol support and assessment reuse ([#26](https://github.com/nudam00/pl-job-search/issues/26)) ([6a63c09](https://github.com/nudam00/pl-job-search/commit/6a63c0921f4efdc84dcf3404c4317190adac2a1d))
+
 ## [0.4.0](https://github.com/nudam00/pl-job-search/compare/pl-job-search-v0.3.2...pl-job-search-v0.4.0) (2026-10-25)
 
 

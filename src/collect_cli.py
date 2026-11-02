@@ -11,6 +11,7 @@ from .domain import Offer
 from .infra.justjoin import JustJoinHtmlSource
 from .infra.nofluff import NoFluffHtmlSource
 from .infra.storage import CsvStore, JsonlStore
+from .infra.theprotocol import TheProtocolBrowserSource
 from .log_setup import configure_logging
 
 log = structlog.get_logger(__name__)
@@ -32,15 +33,24 @@ def main() -> int:
             resources.callback(just_join_source.close)
             nofluff_source = NoFluffHtmlSource()
             resources.callback(nofluff_source.close)
+            protocol_source = TheProtocolBrowserSource()
+            resources.callback(protocol_source.close)
             offers = collect_offers(
                 urls,
-                {"justjoin.it": just_join_source, "nofluffjobs.com": nofluff_source},
+                {
+                    "justjoin.it": just_join_source,
+                    "nofluffjobs.com": nofluff_source,
+                    "theprotocol.it": protocol_source,
+                },
                 existing,
                 store.append,
             )
     except (OSError, ValueError, RuntimeError) as exc:
         log.error("offer_collection_failed", error=str(exc))  # noqa: TRY400
         return 1
+    except KeyboardInterrupt:
+        log.info("offer_collection_cancelled")
+        return 130
     log.info("offers_saved", count=len(offers), output=str(args.output))
     return 0
 

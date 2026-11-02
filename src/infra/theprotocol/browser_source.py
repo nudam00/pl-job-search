@@ -181,7 +181,7 @@ class TheProtocolBrowserSource:
         try:
             from playwright import sync_api  # noqa: PLC0415 - optional browser extra
         except ImportError as exc:
-            msg = "The Protocol requires browser support: run uv sync --frozen --extra browser"
+            msg = "The Protocol requires browser support"
             raise RuntimeError(msg) from exc
         remaining = self.delay_seconds - (time.monotonic() - self._last_request)
         if remaining > 0:

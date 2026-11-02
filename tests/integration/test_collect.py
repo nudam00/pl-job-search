@@ -9,6 +9,7 @@ import pytest
 
 from src.collect_cli import main
 from src.infra.justjoin import JustJoinHtmlSource
+from src.infra.theprotocol.state_parser import StateParser
 
 LISTING = "https://justjoin.it/job-offers/all-locations/ai?sortBy=newest"
 PAGE_TWO = LISTING + "&page=2"
@@ -163,3 +164,26 @@ def test_reuses_http_client_for_multiple_pages() -> None:
     client_type.assert_called_once()
     assert client_type.return_value.get.call_count == 2
     client_type.return_value.close.assert_called_once()
+
+
+@pytest.mark.parametrize("state_first", [True, False])
+def test_protocol_keeps_next_state_and_json_ld_separate(state_first: bool) -> None:
+    state = {"offersResponse": {"offers": [{"id": "example"}]}}
+    posting = {"@type": "JobPosting", "title": "Python Developer"}
+    state_script = (
+        '<script id="__NEXT_DATA__" type="application/json">'
+        + json.dumps({"props": {"pageProps": state}})
+        + "</script>"
+    )
+    posting_script = page(posting)
+    html = (
+        state_script + posting_script if state_first else posting_script + state_script
+    )
+    parser = StateParser()
+    for character in html:
+        parser.feed(character)
+    parser.close()
+
+    assert parser.state == state
+    assert parser.documents == [posting]
+    assert parser.job_postings() == [posting]

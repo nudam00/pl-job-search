@@ -15,6 +15,7 @@ Write docstrings in the same style and level of detail as analogous code, includ
 - To add a job site, implement `OfferSource` and register its hostname in `collect_cli.py`.
   Register resource cleanup with `ExitStack`. Validate URLs before fetching and keep redirects disabled or validate every redirect target.
 - Keep assessment history durable after each successful score. Preserve the existing JSONL format unless a migration is part of the task.
+- A CV change must not invalidate saved assessments or hide them from the shortlist. Keep `cv_hash` as assessment metadata; reuse scores by offer URL and rubric version.
 - Never commit API keys, CVs, extracted CV text, or files from `data/`. Tests should use synthetic data and mock external HTTP/PDF boundaries.
 
 ## Checks

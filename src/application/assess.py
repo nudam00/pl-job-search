@@ -11,26 +11,20 @@ from .ports import MatchScorer
 def pending_offers(
     offers: list[Offer],
     assessments: list[Assessment],
-    cv_hash: str,
     rubric_version: str,
 ) -> list[Offer]:
-    """Return the subset of offers that have not yet been assessed for the given CV hash and rubric version.
+    """Return offers without an assessment for the given rubric version.
 
     Args:
         offers (list[Offer]): A list of offers to check for pending assessments.
         assessments (list[Assessment]): A list of existing assessments to compare against.
-        cv_hash (str): The hash of the CV to filter assessments by.
         rubric_version (str): The rubric and experience setting used to score.
 
     Returns:
-        list[Offer]: A list of offers that have not yet been assessed for the given CV hash and rubric version.
+        list[Offer]: Offers not yet assessed for the given rubric version, regardless of CV.
 
     """
-    assessed = {
-        a.url
-        for a in assessments
-        if a.cv_hash == cv_hash and a.rubric_version == rubric_version
-    }
+    assessed = {a.url for a in assessments if a.rubric_version == rubric_version}
     pending = []
     for offer in offers:
         if offer.url not in assessed:
@@ -40,13 +34,12 @@ def pending_offers(
 
 
 def shortlist_assessments(
-    assessments: list[Assessment], cv_hash: str, threshold: float, rubric_version: str
+    assessments: list[Assessment], threshold: float, rubric_version: str
 ) -> list[Assessment]:
-    """Select the latest assessment per URL for this CV and rubric, above the threshold.
+    """Select the latest assessment per URL for the rubric, regardless of CV.
 
     Args:
         assessments (list[Assessment]): A list of existing assessments to filter and sort.
-        cv_hash (str): The hash of the CV to filter assessments by.
         threshold (float): The minimum score to include in the shortlist.
         rubric_version (str): The rubric and experience setting used to score.
 
@@ -57,7 +50,7 @@ def shortlist_assessments(
     current = {
         assessment.url: assessment
         for assessment in assessments
-        if assessment.cv_hash == cv_hash and assessment.rubric_version == rubric_version
+        if assessment.rubric_version == rubric_version
     }
     return sorted(
         (

@@ -37,8 +37,12 @@ cp examples/listings.csv data/listings.csv
 uv run python -m src.collect_cli data/listings.csv data/offers.jsonl
 ```
 
-The collector supports Just Join IT (`https://justjoin.it/job-offers/...`) and No Fluff Jobs (`https://nofluffjobs.com/pl/...`) listing URLs.
+The collector supports Just Join IT (`https://justjoin.it/job-offers/...`), No Fluff Jobs (`https://nofluffjobs.com/pl/...`), and The Protocol (`https://theprotocol.it/filtry/...` or `https://theprotocol.it/praca`) listing URLs.
 Offers are appended to `data/offers.jsonl` as they are collected. Later runs preserve saved offers and fetch details only for new URLs, so interrupted runs can resume.
+
+The Protocol requires installed Google Chrome.
+Chrome opens when the first The Protocol listing is collected. If a challenge appears, complete it manually and press Enter in the terminal when prompted.
+Collection reads all listing pages before fetching details. The temporary browser session closes when the run ends.
 
 Copy [the example exclusions file](examples/exclusions.json) and edit its lists of title keywords, company keywords, and offer URLs:
 
@@ -86,7 +90,8 @@ Each line must contain the fields shown below; replace the example values with y
 ```
 
 Successful scores, including scores below the threshold, are saved in `data/assessments.jsonl`.
-Rerunning with the same CV and rubric reuses them; changing either reassesses offers in the supplied snapshot.
+Replacing the CV does not rescore saved offers or remove their scores from the shortlist. New offers use the current CV, and each assessment keeps the hash of the CV used to score it.
+Changing the scoring rubric or `--max-required-years` still reassesses offers in the supplied snapshot.
 `data/shortlist.csv` is rebuilt from assessment history with one row per offer URL, so manually removed rows can reappear.
 
 ## Privacy and cost

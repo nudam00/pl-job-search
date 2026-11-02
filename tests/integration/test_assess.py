@@ -200,18 +200,24 @@ def test_history_shortlist_threshold_and_cv_change() -> None:
             with shortlist.open(newline="", encoding="utf-8") as file:
                 assert len(list(csv.DictReader(file))) == 2
 
-            JsonlStore(offers, Offer).write([offer("three")])
             cv.write_bytes(b"changed CV")
+            with patch.dict("os.environ", {"OPENAI_API_KEY": ""}):
+                assert main() == 0
+            assert http.call_count == 2
+            JsonlStore(offers, Offer).write(
+                [offer("one"), offer("two"), offer("three")]
+            )
             assert main() == 0
 
         records = JsonlStore(history, Assessment).read()
         assert len(records) == 3
         assert records[-1].url == offer("three").url
+        assert records[0].cv_hash != records[-1].cv_hash
         assert http.call_count == 3
         assert pdf.call_count == 2
         assert not history.with_suffix(".offers.jsonl").exists()
         with shortlist.open(newline="", encoding="utf-8") as file:
-            assert len(list(csv.DictReader(file))) == 0
+            assert [row["url"] for row in csv.DictReader(file)] == [offer("one").url]
 
 
 def test_max_required_years_changes_prompt_and_assessment_reuse() -> None:

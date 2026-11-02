@@ -1,6 +1,6 @@
 # Job offer collection
 
-The application collects offers shown on selected Just Join IT and No Fluff Jobs listing pages.
+The application collects offers shown on selected Just Join IT, No Fluff Jobs, and The Protocol listing pages.
 
 ## Language
 

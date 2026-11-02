@@ -127,7 +127,6 @@ def main() -> int:
         pending = pending_offers(
             [offer for offer in offers if offer.url not in excluded_urls],
             history,
-            cv_hash,
             rubric_version,
         )
         if pending and not os.environ.get("OPENAI_API_KEY"):
@@ -155,7 +154,7 @@ def main() -> int:
             [
                 assessment
                 for assessment in shortlist_assessments(
-                    history, cv_hash, args.threshold, rubric_version
+                    history, args.threshold, rubric_version
                 )
                 if assessment.url not in excluded_urls
             ],
